@@ -1,0 +1,56 @@
+{
+  "name": "graph-spec",
+  "version": "0.1.0",
+  "description": "Node.js rewrite of graphify for building queryable knowledge graphs",
+  "license": "MIT",
+  "type": "commonjs",
+  "main": "./src/index.js",
+  "bin": {
+    "graph-spec": "bin/graph-spec.js",
+    "graphify": "bin/graph-spec.js"
+  },
+  "files": [
+    "bin",
+    "src",
+    "README.md",
+    "docs/user-manual.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "exports": {
+    ".": "./src/index.js",
+    "./package.json": "./package.json",
+    "./bin/graph-spec.js": "./bin/graph-spec.js",
+    "./src/*": "./src/*"
+  },
+  "keywords": [
+    "knowledge-graph",
+    "cli",
+    "graphify",
+    "tree-sitter",
+    "npm"
+  ],
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "test:unit": "node --test tests/*.test.js",
+    "start": "node bin/graph-spec.js"
+  },
+  "engines": {
+    "node": ">=20.11"
+  },
+  "dependencies": {
+    "@kreuzberg/tree-sitter-language-pack": "^1.4.1",
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "chokidar": "^4.0.3",
+    "commander": "^13.1.0",
+    "fast-glob": "^3.3.3",
+    "graphology": "^0.26.0",
+    "graphology-communities-louvain": "^2.0.2",
+    "gray-matter": "^4.0.3",
+    "ignore": "^7.0.5",
+    "mammoth": "^1.8.0",
+    "neo4j-driver": "^6.0.1",
+    "pdfjs-dist": "^5.4.149",
+    "xlsx": "^0.18.5"
+  }
+}

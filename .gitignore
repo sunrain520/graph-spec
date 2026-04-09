@@ -1,0 +1,9 @@
+node_modules/
+dist/
+coverage/
+graphify-out/
+graph-spec-out/
+.graphify_config.json
+.DS_Store
+*.tgz
+
