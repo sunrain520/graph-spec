@@ -31,6 +31,31 @@ test('collectFiles respects ignore files and skips secrets', () => {
   assert.deepEqual(files.map((file) => path.relative(root, file)), ['keep.py']);
 });
 
+test('collectFiles skips .graph-spec/ internal state directory', () => {
+  const root = makeTmp();
+  fs.writeFileSync(path.join(root, 'keep.py'), 'print("ok")\n');
+  const stateDir = path.join(root, '.graph-spec', 'runtime', 'cache');
+  fs.mkdirSync(stateDir, { recursive: true });
+  fs.writeFileSync(path.join(stateDir, 'should_not_appear.py'), 'print("internal")\n');
+
+  const files = collectFiles(root);
+  assert.deepEqual(files.map((file) => path.relative(root, file)), ['keep.py']);
+});
+
+test('collectFiles includes ingested runtime notes', () => {
+  const root = makeTmp();
+  fs.writeFileSync(path.join(root, 'keep.py'), 'print("ok")\n');
+  const ingestDir = path.join(root, '.graph-spec', 'runtime', 'ingest');
+  fs.mkdirSync(ingestDir, { recursive: true });
+  fs.writeFileSync(path.join(ingestDir, 'ingested.md'), '# Ingested\n');
+
+  const files = collectFiles(root);
+  assert.deepEqual(
+    files.map((file) => path.relative(root, file)).sort(),
+    ['.graph-spec/runtime/ingest/ingested.md', 'keep.py'].sort(),
+  );
+});
+
 test('detect resolves output directory from config file', () => {
   const root = makeTmp();
   fs.writeFileSync(path.join(root, '.graphify_config.json'), JSON.stringify({ out_dir: 'docs/contents/graphify-out' }), 'utf8');
@@ -38,9 +63,9 @@ test('detect resolves output directory from config file', () => {
 
   const result = detect(root);
   assert.equal(result.outDir, path.join(root, 'docs/contents/graphify-out'));
-  assert.equal(result.convertedDir, path.join(root, 'docs/contents/graphify-out', 'converted'));
-  assert.equal(result.cacheDir, path.join(root, 'docs/contents/graphify-out', 'cache'));
+  assert.equal(result.cacheDir, path.join(root, '.graph-spec', 'runtime', 'cache'));
+  assert.equal(result.manifestPath, path.join(root, '.graph-spec', 'runtime', 'manifest.json'));
+  assert.equal(result.convertedDir, undefined);
   assert.equal(result.files.length, 1);
   assert.equal(result.files[0].type, 'code');
 });
-

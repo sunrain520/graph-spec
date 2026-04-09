@@ -3,6 +3,7 @@ dist/
 coverage/
 graphify-out/
 graph-spec-out/
+.graph-spec/
 .graphify_config.json
 .DS_Store
 *.tgz

@@ -1,6 +1,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { resolveOutputDir } = require('./config');
+const { getProjectStateDir, getRuntimeDir, getRuntimePath } = require('./paths');
 
 const CODE_EXTENSIONS = new Set([
   '.py', '.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs',
@@ -112,8 +113,12 @@ function isIgnored(filePath, root, patterns) {
 }
 
 function collectFiles(root, options = {}) {
+  const resolvedRoot = path.resolve(root || '.');
+  const stateDir = getProjectStateDir(resolvedRoot);
+  const runtimeDir = getRuntimeDir(resolvedRoot);
+  const ingestDir = getRuntimePath(resolvedRoot, 'ingest');
   const followSymlinks = Boolean(options.followSymlinks);
-  const patterns = readIgnorePatterns(root);
+  const patterns = readIgnorePatterns(resolvedRoot);
   const results = [];
 
   function walk(current) {
@@ -124,6 +129,12 @@ function collectFiles(root, options = {}) {
       const full = path.join(current, entry.name);
       const stat = fs.statSync(full);
       if (stat.isDirectory()) {
+        if (current === stateDir && entry.name !== 'runtime') continue;
+        if (current === runtimeDir && entry.name !== 'ingest') continue;
+        if (full === stateDir) {
+          walk(full);
+          continue;
+        }
         walk(full);
         continue;
       }
@@ -136,7 +147,7 @@ function collectFiles(root, options = {}) {
     }
   }
 
-  walk(path.resolve(root));
+  walk(resolvedRoot);
   results.sort();
   return results;
 }
@@ -144,9 +155,6 @@ function collectFiles(root, options = {}) {
 function detect(root, options = {}) {
   const resolvedRoot = path.resolve(root || '.');
   const outDir = resolveOutputDir(resolvedRoot, options.outDir);
-  const convertedDir = path.join(outDir, 'converted');
-  const cacheDir = path.join(outDir, 'cache');
-  const manifestPath = path.join(outDir, 'manifest.json');
   const files = collectFiles(resolvedRoot, options);
   const classified = files.map((file) => ({
     path: file,
@@ -158,9 +166,8 @@ function detect(root, options = {}) {
   return {
     root: resolvedRoot,
     outDir,
-    convertedDir,
-    cacheDir,
-    manifestPath,
+    cacheDir: getRuntimePath(resolvedRoot, 'cache'),
+    manifestPath: getRuntimePath(resolvedRoot, 'manifest.json'),
     files: classified,
     totalWords,
   };

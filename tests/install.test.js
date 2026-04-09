@@ -45,7 +45,7 @@ test('watch rebuild helper and benchmark work on generated graphs', () => {
   const rebuild = _rebuildCode(root);
   assert.ok(rebuild.ok);
   const result = runPipeline(root);
-  const benchmark = runBenchmark(result.outputs.graphJson, { question: 'hello' });
+  const benchmark = runBenchmark(result.outputs.graphJson, root, { question: 'hello' });
   assert.ok(benchmark.query_tokens > 0);
   assert.ok(benchmark.reduction >= 0);
 });

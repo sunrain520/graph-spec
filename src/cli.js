@@ -214,7 +214,7 @@ function printHelp() {
     '',
     'Commands:',
     '  build [root]             build the graph for a folder',
-    '  add <url>                fetch a URL into raw/ and rebuild the graph',
+    '  add <url>                fetch a URL into .graph-spec/runtime/ingest/ and rebuild the graph',
     '  query "<question>"       query an existing graph.json',
     '  path <source> <target>   print the shortest path between two nodes',
     '  explain <node>          print node details and neighbors',
@@ -357,15 +357,14 @@ function main(argv = process.argv.slice(2)) {
     }
     case 'add': {
       if (!rest[0]) {
-        throw new Error('Usage: graph-spec add <url> [--target-dir DIR] [--author NAME] [--contributor NAME]');
+        throw new Error('Usage: graph-spec add <url> [--author NAME] [--contributor NAME]');
       }
-      const targetDir = flags.targetDir || path.join('.', 'raw');
-      const saved = ingestUrl(rest[0], targetDir, {
+      const root = path.resolve('.');
+      const saved = ingestUrl(rest[0], root, {
         author: flags.author,
         contributor: flags.contributor,
       });
       return Promise.resolve(saved).then((ingested) => {
-        const root = path.resolve('.');
         const outcome = runBuild(root, flags);
         if (outcome && typeof outcome.then === 'function') {
           return outcome.then((result) => {
@@ -499,7 +498,8 @@ function main(argv = process.argv.slice(2)) {
     }
     case 'benchmark': {
       const graphPath = rest[0] || path.join(resolveOutputDir('.'), 'graph.json');
-      const result = runBenchmark(graphPath, {
+      const root = path.resolve('.');
+      const result = runBenchmark(graphPath, root, {
         question: flags.question,
         depth: Number.isFinite(flags.depth) ? flags.depth : 3,
         mode: flags.dfs ? 'dfs' : 'bfs',

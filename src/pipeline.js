@@ -15,14 +15,14 @@ function runPipeline(root = '.', options = {}) {
   const extractions = [];
 
   for (const entry of detected.files) {
-    const cached = loadCached(entry.path, resolvedRoot, outDir);
+    const cached = loadCached(entry.path, resolvedRoot);
     if (cached) {
       extractions.push(cached);
       continue;
     }
     const extraction = extract(entry.path, { root: resolvedRoot });
     extraction.meta = { ...(extraction.meta || {}), source_file: entry.path };
-    saveCached(entry.path, extraction, resolvedRoot, outDir);
+    saveCached(entry.path, extraction, resolvedRoot);
     extractions.push(extraction);
   }
 
@@ -36,7 +36,7 @@ function runPipeline(root = '.', options = {}) {
       type: entry.type,
       words: entry.words,
     })),
-    detected.manifestPath,
+    resolvedRoot,
   );
 
   return {

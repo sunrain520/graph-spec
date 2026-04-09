@@ -1,7 +1,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
-const { resolveOutputDir } = require('./config');
+const { getRuntimePath } = require('./paths');
 
 function fileHash(filePath) {
   const hash = crypto.createHash('sha256');
@@ -9,51 +9,51 @@ function fileHash(filePath) {
   return hash.digest('hex');
 }
 
-function cacheDir(root = '.', outDir = null) {
-  return path.join(resolveOutputDir(root, outDir), 'cache');
+function cacheDir(root = '.') {
+  return getRuntimePath(root, 'cache');
 }
 
-function cachePathFor(filePath, root = '.', outDir = null) {
-  return path.join(cacheDir(root, outDir), `${fileHash(filePath)}.json`);
+function cachePathFor(filePath, root = '.') {
+  return path.join(cacheDir(root), `${fileHash(filePath)}.json`);
 }
 
-function loadCached(filePath, root = '.', outDir = null) {
-  const file = cachePathFor(filePath, root, outDir);
+function loadCached(filePath, root = '.') {
+  const file = cachePathFor(filePath, root);
   if (!fs.existsSync(file)) return null;
   return JSON.parse(fs.readFileSync(file, 'utf8'));
 }
 
-function saveCached(filePath, result, root = '.', outDir = null) {
-  const dir = cacheDir(root, outDir);
+function saveCached(filePath, result, root = '.') {
+  const dir = cacheDir(root);
   fs.mkdirSync(dir, { recursive: true });
-  fs.writeFileSync(cachePathFor(filePath, root, outDir), JSON.stringify(result, null, 2), 'utf8');
+  fs.writeFileSync(cachePathFor(filePath, root), JSON.stringify(result, null, 2), 'utf8');
 }
 
-function cachedFiles(root = '.', outDir = null) {
-  const dir = cacheDir(root, outDir);
+function cachedFiles(root = '.') {
+  const dir = cacheDir(root);
   if (!fs.existsSync(dir)) return [];
   return fs.readdirSync(dir).filter((file) => file.endsWith('.json'));
 }
 
-function clearCache(root = '.', outDir = null) {
-  const dir = cacheDir(root, outDir);
+function clearCache(root = '.') {
+  const dir = cacheDir(root);
   fs.rmSync(dir, { recursive: true, force: true });
 }
 
-function checkSemanticCache(filePaths, root = '.', outDir = null) {
+function checkSemanticCache(filePaths, root = '.') {
   const cached = [];
   const uncached = [];
   for (const filePath of filePaths) {
-    if (loadCached(filePath, root, outDir)) cached.push(filePath);
+    if (loadCached(filePath, root)) cached.push(filePath);
     else uncached.push(filePath);
   }
   return { cached, uncached };
 }
 
-function saveSemanticCache(extractions, root = '.', outDir = null) {
+function saveSemanticCache(extractions, root = '.') {
   for (const extraction of extractions) {
     if (!extraction || !extraction.meta || !extraction.meta.source_file) continue;
-    saveCached(extraction.meta.source_file, extraction, root, outDir);
+    saveCached(extraction.meta.source_file, extraction, root);
   }
 }
 

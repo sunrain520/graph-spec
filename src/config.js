@@ -1,5 +1,6 @@
 const fs = require('node:fs');
 const path = require('node:path');
+const { getProjectStateDir } = require('./paths');
 
 const DEFAULT_OUT_DIR = 'graphify-out';
 const CONFIG_FILE = '.graphify_config.json';
@@ -27,7 +28,12 @@ function resolveOutputDir(targetRoot, outDir) {
   const config = outDir == null ? loadConfig(root) : {};
   const configured = outDir == null ? config.out_dir : outDir;
   const resolved = configured || DEFAULT_OUT_DIR;
-  return path.isAbsolute(resolved) ? path.resolve(resolved) : path.resolve(root, resolved);
+  const finalPath = path.isAbsolute(resolved) ? path.resolve(resolved) : path.resolve(root, resolved);
+  const stateDir = getProjectStateDir(root);
+  if (finalPath === stateDir || finalPath.startsWith(stateDir + path.sep)) {
+    throw new Error(`out_dir must not be inside the internal state directory (.graph-spec/): ${finalPath}`);
+  }
+  return finalPath;
 }
 
 module.exports = {

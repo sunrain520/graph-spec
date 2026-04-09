@@ -10,7 +10,7 @@ This project has a graph-spec knowledge graph at ${outDir}/.
 
 Rules:
 - Before answering architecture or codebase questions, read ${outDir}/GRAPH_REPORT.md for god nodes and community structure
-- If ${outDir}/wiki/index.md exists, navigate it instead of reading raw files
+- If ${outDir}/wiki/index.md exists, navigate it instead of reading source files
 - After modifying code files in this session, run \`node -e "require('graph-spec/src/watch')._rebuildCode(process.cwd())"\` to keep the graph current
 `;
 }
@@ -36,7 +36,7 @@ function writeClaude(projectDir = '.', options = {}) {
 
   const settingsPath = path.join(root, '.claude', 'settings.json');
   fs.mkdirSync(path.dirname(settingsPath), { recursive: true });
-  const command = `node -e "const fs=require('node:fs');const path=require('node:path');const {resolveOutputDir}=require('graph-spec');const out=resolveOutputDir(process.cwd());const graph=path.join(out,'graph.json');if(fs.existsSync(graph)){console.log('graph-spec: Knowledge graph exists. Read '+path.join(out,'GRAPH_REPORT.md')+' before searching raw files.');}"`;
+  const command = `node -e "const fs=require('node:fs');const path=require('node:path');const {resolveOutputDir}=require('graph-spec');const out=resolveOutputDir(process.cwd());const graph=path.join(out,'graph.json');if(fs.existsSync(graph)){console.log('graph-spec: Knowledge graph exists. Read '+path.join(out,'GRAPH_REPORT.md')+' before searching source files.');}"`;
   const payload = fs.existsSync(settingsPath)
     ? safeJsonParse(fs.readFileSync(settingsPath, 'utf8'))
     : {};

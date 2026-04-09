@@ -3,6 +3,8 @@ const path = require('node:path');
 const chokidar = require('chokidar');
 const { runPipeline } = require('./pipeline');
 const { detect } = require('./detect');
+const { getProjectStateDir } = require('./paths');
+const { resolveOutputDir } = require('./config');
 
 function _rebuildCode(watchPath, options = {}) {
   const result = runPipeline(watchPath, options);
@@ -26,9 +28,19 @@ function _hasNonCode(changedPaths) {
 
 function watch(watchPath, debounce = 3.0, options = {}) {
   const root = path.resolve(watchPath || '.');
+  const stateDir = getProjectStateDir(root);
+  const outDir = resolveOutputDir(root, options.outDir);
+  const configPath = path.resolve(path.join(root, '.graphify_config.json'));
+
   let timer = null;
   const watcher = chokidar.watch(root, {
-    ignored: /(^|[\\/])\../,
+    ignored: (filePath) => {
+      const resolved = path.resolve(filePath);
+      if (resolved === configPath) return false;
+      if (resolved === stateDir || resolved.startsWith(stateDir + path.sep)) return true;
+      if (resolved === outDir || resolved.startsWith(outDir + path.sep)) return true;
+      return /(^|[\\/])\./.test(path.basename(filePath));
+    },
     ignoreInitial: true,
   });
 

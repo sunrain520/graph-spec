@@ -1,17 +1,18 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { loadGraph, queryGraph } = require('./serve');
+const { getRuntimePath } = require('./paths');
 
 function estimateTokens(text) {
   return Math.ceil(String(text).length / 4);
 }
 
-function runBenchmark(graphPath, options = {}) {
+function runBenchmark(graphPath, root = '.', options = {}) {
   const graph = loadGraph(graphPath);
   const question = options.question || 'what connects the main concepts?';
   const depth = options.depth || 3;
   const queryText = queryGraph(graph, question, { depth, mode: options.mode || 'bfs' });
-  const manifestPath = path.join(path.dirname(graphPath), 'manifest.json');
+  const manifestPath = getRuntimePath(path.resolve(root), 'manifest.json');
   let corpusWords = 0;
   if (fs.existsSync(manifestPath)) {
     try {
@@ -20,6 +21,8 @@ function runBenchmark(graphPath, options = {}) {
     } catch {
       corpusWords = 0;
     }
+  } else {
+    process.stderr.write(`[graph-spec] Warning: manifest not found at ${manifestPath}; corpus_words will be 0\n`);
   }
   return {
     corpus_words: corpusWords,
@@ -46,4 +49,3 @@ module.exports = {
   printBenchmark,
   runBenchmark,
 };
-

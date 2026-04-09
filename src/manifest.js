@@ -2,9 +2,10 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { detect } = require('./detect');
 const { fileHash } = require('./cache');
-const { resolveOutputDir } = require('./config');
+const { getRuntimePath } = require('./paths');
 
-function loadManifest(manifestPath = path.join(resolveOutputDir('.'), 'manifest.json')) {
+function loadManifest(root = '.') {
+  const manifestPath = getRuntimePath(root, 'manifest.json');
   if (!fs.existsSync(manifestPath)) return null;
   try {
     return JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
@@ -13,7 +14,8 @@ function loadManifest(manifestPath = path.join(resolveOutputDir('.'), 'manifest.
   }
 }
 
-function saveManifest(files, manifestPath) {
+function saveManifest(files, root) {
+  const manifestPath = getRuntimePath(root, 'manifest.json');
   fs.mkdirSync(path.dirname(manifestPath), { recursive: true });
   const payload = {
     generated_at: new Date().toISOString(),
@@ -25,7 +27,7 @@ function saveManifest(files, manifestPath) {
 
 function detectIncremental(root, options = {}) {
   const current = detect(root, options);
-  const manifest = loadManifest(current.manifestPath) || { files: [] };
+  const manifest = loadManifest(root) || { files: [] };
   const previous = new Map((manifest.files || []).map((item) => [item.path, item.hash]));
   const files = current.files.map((entry) => {
     const hash = fileHash(entry.path);
@@ -50,4 +52,3 @@ module.exports = {
   loadManifest,
   saveManifest,
 };
-

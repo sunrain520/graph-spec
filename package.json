@@ -12,8 +12,10 @@
   "files": [
     "bin",
     "src",
+    "skills",
     "README.md",
     "docs/user-manual.md",
+    "docs/output-artifacts.md",
     "LICENSE",
     "CHANGELOG.md"
   ],
@@ -44,6 +46,7 @@
     "chokidar": "^4.0.3",
     "commander": "^13.1.0",
     "fast-glob": "^3.3.3",
+    "graph-spec": "file:graph-spec-0.1.0.tgz",
     "graphology": "^0.26.0",
     "graphology-communities-louvain": "^2.0.2",
     "gray-matter": "^4.0.3",

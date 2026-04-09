@@ -26,6 +26,29 @@
 
 ## 安装
 
+### 本地开发 / 未发布时
+
+如果你是在本地仓库里直接试命令，先把 CLI 链接到当前 shell：
+
+```bash
+npm link
+graph-spec claude install
+```
+
+也可以不做全局链接，直接执行入口文件：
+
+```bash
+node ./bin/graph-spec.js claude install
+```
+
+如果仓库里已经完成 `npm install`，也可以用：
+
+```bash
+npx graph-spec claude install
+```
+
+### 发布到 npm 后
+
 ```bash
 npm install graph-spec
 ```
@@ -57,6 +80,32 @@ graphify build .
 graphify query "authentication flow"
 ```
 
+## URL 抓取与入图
+
+`graph-spec add <url>` 会把外部内容抓取到 `.graph-spec/runtime/ingest/`，然后立刻重建图谱。
+
+它支持这些常见来源：
+
+- 普通网页：抓取 HTML 正文并转成 Markdown
+- arXiv：提取论文标题、作者和摘要
+- PDF：直接下载原文件，供后续扫描
+- 图片：下载到内部 ingest 目录，后续可以被图谱流程识别
+- X / Twitter：尽量抓取 oEmbed 信息和可读文本
+
+示例：
+
+```bash
+graph-spec add "https://example.com/article"
+graph-spec add "https://arxiv.org/abs/2401.00001"
+graph-spec add "https://example.com/paper.pdf"
+```
+
+执行后，图谱构建会自动把 `.graph-spec/runtime/ingest/` 里的内容纳入检测与抽取，所以你通常不需要再手动运行 `build`。如果你想重新全量构建，也可以直接再跑一次：
+
+```bash
+graph-spec build .
+```
+
 ## 与 LLM 协作
 
 `graph.json` 不适合一次性塞进 prompt。更稳妥的工作流是先看摘要，再按需提取局部子图：
@@ -82,7 +131,7 @@ graph-spec mcp graphify-out/graph.json
 
 默认输出目录是 `graphify-out/`。
 
-如果需要动态指定输出目录，在项目根目录创建 `.graphify_config.json`：
+如果需要动态指定输出目录，在项目根目录创建 `.graphify_config.json`。例如：
 
 ```json
 {
@@ -90,13 +139,27 @@ graph-spec mcp graphify-out/graph.json
 }
 ```
 
+这里的 `out_dir` 是相对于项目根目录解析的，所以上面的配置会写到：
+
+```text
+./docs/contents/graphify-out/
+```
+
+如果你想临时覆盖配置，可以直接传命令行参数：
+
+```bash
+graph-spec build . --out-dir docs/contents/graphify-out
+```
+
+优先级是：`--out-dir` 高于 `.graphify_config.json`。
+
 之后构建、查询、缓存、hook 和安装都会使用这个目录。
 
 ## 常用命令
 
 ```bash
 graph-spec build [root]           # 构建知识图
-graph-spec add <url>              # 抓取 URL 到 raw/ 并重建图谱
+graph-spec add <url>              # 抓取 URL 到 .graph-spec/runtime/ingest/ 并重建图谱
 graph-spec query "<question>"     # 查询 graph.json
 graph-spec path <source> <target>  # 查询最短路径
 graph-spec explain <node>         # 查看节点详情与邻居
@@ -114,6 +177,9 @@ graph-spec codex install          # 写入 AGENTS.md
 ## 文档
 
 - [用户手册](./docs/user-manual.md)
+- [最终产物与目录结构](./docs/output-artifacts.md)
+- [本地源码安装手册](./docs/local-source-installation.md)
+- [本地测试清单](./docs/testing/local-test-checklist.md)
 
 ## 开发
 

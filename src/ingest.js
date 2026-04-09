@@ -1,6 +1,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { validateUrl } = require('./security');
+const { getRuntimePath } = require('./paths');
 
 function yamlString(value) {
   return String(value || '')
@@ -171,9 +172,9 @@ async function fetchArxiv(url, options = {}) {
   return { content, filename: `arxiv_${paperId.replace('.', '_')}.md`, type: 'paper' };
 }
 
-async function ingestUrl(url, targetDir = path.join('.', 'raw'), options = {}) {
+async function ingestUrl(url, root = '.', options = {}) {
   const normalized = validateUrl(url);
-  const dir = path.resolve(targetDir);
+  const dir = getRuntimePath(path.resolve(root), 'ingest');
   fs.mkdirSync(dir, { recursive: true });
   const type = detectUrlType(normalized);
   let result;

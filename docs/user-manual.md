@@ -2,6 +2,10 @@
 
 本文面向最终使用者，说明 `graph-spec` 如何安装、构建知识图、查询结果、配置输出目录，以及如何把图谱接入自己的工作流和工具链。
 
+如果你想先看最终会生成哪些文件，可以直接跳到：
+
+- [最终产物与目录结构](./output-artifacts.md)
+
 ## 1. 这是什么
 
 `graph-spec` 会扫描一个目录，把代码、文档、论文、图片和 Office 文件整理成一张知识图，然后输出成多个可消费的文件：
@@ -14,6 +18,8 @@
 - `cypher.txt`：供 Neo4j 使用的 Cypher 语句
 - `wiki/`：面向 agent 的 markdown 知识库
 - `obsidian/`：Obsidian vault
+
+更完整的产物清单、目录结构和每个文件的作用，见 [最终产物与目录结构](./output-artifacts.md)。
 
 ## 2. 安装
 
@@ -79,7 +85,39 @@ graph-spec wiki
 graph-spec add "https://example.com/article"
 ```
 
-会把网页保存到 `raw/`，然后自动重建知识图。
+`add` 会先抓取外部 URL，再把结果保存到 `.graph-spec/runtime/ingest/`，最后自动重建知识图。
+
+当前支持的 URL 类型包括：
+
+- 普通网页：抓取 HTML 正文并转成 Markdown
+- arXiv：提取标题、作者和摘要，保存为论文笔记
+- PDF：直接下载原文件到内部 ingest 目录
+- 图片：直接下载原文件到内部 ingest 目录
+- X / Twitter：尽量读取 oEmbed 和可读文本
+
+示例：
+
+```bash
+graph-spec add "https://example.com/article"
+graph-spec add "https://arxiv.org/abs/2401.00001"
+graph-spec add "https://example.com/paper.pdf"
+```
+
+抓取后的文件不会落在项目根目录，而是统一写入：
+
+```text
+.graph-spec/runtime/ingest/
+```
+
+这个目录会被后续 `build` 自动纳入检测与抽取，所以通常不需要再手动复制文件或改动原始目录。
+
+如果你想重新整理整个目录，直接再执行一次：
+
+```bash
+graph-spec build .
+```
+
+注意：`add` 不再接受旧版的 `--target-dir`，它的输出目录固定在内部 ingest 目录里。
 
 ### 3.7 生成 Obsidian vault
 
@@ -134,7 +172,7 @@ graphify-out/
 
 ### 动态指定目录
 
-如果你想把输出放到别的地方，在项目根目录创建 `.graphify_config.json`：
+如果你想把输出放到别的地方，在项目根目录创建 `.graphify_config.json`。例如：
 
 ```json
 {
@@ -142,7 +180,19 @@ graphify-out/
 }
 ```
 
-支持相对路径和绝对路径。所有派生产物都会基于这个目录生成。
+`out_dir` 是相对于被分析目录解析的，所以上面的配置会把输出写到：
+
+```text
+./docs/contents/graphify-out/
+```
+
+如果需要临时覆盖这个值，可以用命令行参数：
+
+```bash
+graph-spec build . --out-dir docs/contents/graphify-out
+```
+
+优先级是 `--out-dir` 高于 `.graphify_config.json`。支持相对路径和绝对路径。所有派生产物都会基于这个目录生成。
 
 ### 目录内会有哪些文件
 
@@ -171,6 +221,29 @@ graph-spec build [root]
 - `--out-dir <path>`：显式覆盖输出目录
 - `--wiki`：构建时顺便生成 wiki
 - `--wiki-dir <path>`：指定 wiki 输出位置
+
+### `add`
+
+```bash
+graph-spec add <url>
+```
+
+抓取一个外部 URL，并把内容加入图谱。
+
+行为说明：
+
+- 支持网页、arXiv、PDF、图片和 X / Twitter
+- 抓取结果写入 `.graph-spec/runtime/ingest/`
+- 命令执行完后会自动触发重建
+- 不再使用旧版 `--target-dir`
+
+常见用法：
+
+```bash
+graph-spec add "https://example.com/article"
+graph-spec add "https://arxiv.org/abs/2401.00001"
+graph-spec add "https://example.com/paper.pdf"
+```
 
 ### `query`
 

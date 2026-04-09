@@ -29,12 +29,13 @@ test('ingestUrl saves a webpage as markdown', async () => {
   const port = await listen(server);
   const root = makeTmp();
   try {
-    const result = await ingestUrl(`http://127.0.0.1:${port}/page`, path.join(root, 'raw'), {
+    const result = await ingestUrl(`http://127.0.0.1:${port}/page`, root, {
       author: 'Alice',
       contributor: 'Bob',
     });
     assert.equal(result.type, 'webpage');
     assert.ok(fs.existsSync(result.outPath));
+    assert.ok(result.outPath.includes(path.join('.graph-spec', 'runtime', 'ingest')));
     const content = fs.readFileSync(result.outPath, 'utf8');
     assert.match(content, /Sample Page/);
     assert.match(content, /Hello/);
@@ -66,10 +67,13 @@ test('cli add ingests a URL and rebuilds the graph', async () => {
   const cwd = process.cwd();
   process.chdir(root);
   try {
-    const result = await main(['add', `http://127.0.0.1:${port}/add`, '--target-dir', 'raw']);
+    const result = await main(['add', `http://127.0.0.1:${port}/add`]);
     assert.ok(result);
-    assert.ok(fs.existsSync(path.join(root, 'raw')));
-    assert.ok(fs.existsSync(path.join(root, 'graphify-out', 'graph.json')));
+    assert.ok(fs.existsSync(path.join(root, '.graph-spec', 'runtime', 'ingest')));
+    const graphPath = path.join(root, 'graphify-out', 'graph.json');
+    assert.ok(fs.existsSync(graphPath));
+    const graph = JSON.parse(fs.readFileSync(graphPath, 'utf8'));
+    assert.ok((graph.nodes || []).length > 0);
   } finally {
     process.chdir(cwd);
     server.close();
